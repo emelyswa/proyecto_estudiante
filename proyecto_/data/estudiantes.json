@@ -3,32 +3,11 @@
     "id": 1,
     "nombre": "Emely",
     "apellido": "Zambrano",
+    "carnet": "EST0001",
     "email": "ezambranom26@unemi.edu.ec",
     "cedula": "0952380186",
     "celular": "0986269141",
-    "notas": {
-      "Programación Orientada A Objetos": [
-        16
-      ]
-    },
-    "materias": [
-      "Programación Orientada A Objetos"
-    ]
-  },
-  {
-    "id": 2,
-    "nombre": "Vanessa",
-    "apellido": "Murillo",
-    "email": "vmurillom@unemi.edu.ec",
-    "cedula": "0999999999",
-    "celular": "0978737126",
-    "notas": {
-      "Programación Orientada A Objetos": [
-        17
-      ]
-    },
-    "materias": [
-      "Programación Orientada A Objetos"
-    ]
+    "notas": {},
+    "materias": []
   }
 ]

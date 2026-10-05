@@ -9,370 +9,465 @@ from shared.herramientas import (
 from views import ClienteController, EstudianteController
 
 
+# ============================================================
+# MENU DE CLIENTES
+# ============================================================
+
 class MenuClientes:
-    """VISTA: muestra, pide y presenta. No decide reglas del negocio."""
 
     TITULO = "SISTEMA DE GESTIÓN DE CLIENTES"
+    ENTIDAD = "cliente"
+    ENTIDADES = "clientes"
+    TEXTO_BUSQUEDA = (
+        "Nombre, apellido, email, teléfono o ciudad"
+    )
     ANCHO = 85
 
-    def __init__(self, controlador=ClienteController):
-        self.__controlador = controlador
-        self.__activo = True
+    def __init__(self):
+        self.__controlador = ClienteController()
 
         self.__opciones = {
-            "1": ("Crear cliente", self.crear),
-            "2": ("Ver todos", self.listar),
-            "3": ("Buscar", self.buscar),
-            "4": ("Ver por id", self.ver_por_id),
-            "5": ("Actualizar", self.actualizar),
-            "6": ("Eliminar", self.eliminar),
-            "7": ("Estadísticas", self.estadisticas),
-            "0": ("Salir", self.salir),
+            1: ("Crear usuario", self.crear),
+            2: ("Ver todos", self.listar),
+            3: ("Buscar", self.buscar),
+            4: ("Ver por ID", self.ver_por_id),
+            5: ("Actualizar", self.actualizar),
+            6: ("Eliminar", self.eliminar),
+            7: ("Estadísticas", self.estadisticas),
+            0: ("Salir", self.salir)
         }
 
-    # ===== PROPIEDAD PARA ACCEDER AL CONTROLADOR =====
     @property
     def controlador(self):
         return self.__controlador
 
-    # ===== AGREGAR OPCIONES =====
-    def agregar_opcion(self, tecla, texto, metodo):
-        self.__opciones[tecla] = (texto, metodo)
+    def agregar_opcion(self, numero, texto, metodo):
+        self.__opciones[numero] = (texto, metodo)
 
-    # ===== ESTÁTICOS =====
     @staticmethod
     def pausa():
-        input("\nPresione Enter para continuar...")
+        input("\nPresione ENTER para continuar...")
 
     @staticmethod
-    def pedir_entero(etiqueta):
-        try:
-            return int(input(etiqueta))
-        except ValueError:
-            return None
+    def pedir_entero(mensaje):
+        while True:
+            try:
+                return int(input(mensaje))
+            except ValueError:
+                imprimir_error(
+                    "Debe ingresar un número entero."
+                )
 
-    @staticmethod
-    def mostrar_resultado(exito, mensaje):
-        if exito:
-            imprimir_exito(mensaje)
-        else:
-            imprimir_error(mensaje)
+    def mostrar_resultado(self, resultado):
 
-    # ===== MOSTRAR TABLA =====
+        if isinstance(resultado, tuple):
+
+            exito, mensaje = resultado
+
+            if exito:
+                imprimir_exito(mensaje)
+            else:
+                imprimir_error(mensaje)
+
+            return exito
+
+        imprimir_info(str(resultado))
+        return True
+
+    # --------------------------------------------------------
+    # TABLA CLIENTES
+    # --------------------------------------------------------
+
     def mostrar_tabla(self, clientes):
+
         print(
             f"{'ID':<5}"
-            f"{'NOMBRE':<25}"
-            f"{'EMAIL':<28}"
+            f"{'NOMBRE':<18}"
+            f"{'APELLIDO':<18}"
+            f"{'EMAIL':<30}"
+            f"{'TELÉFONO':<15}"
             f"{'CIUDAD':<15}"
-            f"{'TELÉFONO':<12}"
         )
 
         print("-" * self.ANCHO)
 
         for cliente in clientes:
+
             print(
                 f"{cliente.id:<5}"
-                f"{cliente.nombre_completo:<25}"
-                f"{cliente.email:<28}"
+                f"{cliente.nombre:<18}"
+                f"{cliente.apellido:<18}"
+                f"{cliente.email:<30}"
+                f"{cliente.telefono:<15}"
                 f"{cliente.ciudad:<15}"
-                f"{cliente.telefono:<12}"
             )
 
         print("-" * self.ANCHO)
-        imprimir_info(f"Total: {len(clientes)} cliente(s)")
 
-    # ===== CREAR =====
+        imprimir_info(
+            f"Total: {len(clientes)} {self.ENTIDADES}"
+        )
+
+    # --------------------------------------------------------
+    # CREAR
+    # --------------------------------------------------------
+
     def crear(self):
-        imprimir_titulo("CREAR NUEVO CLIENTE")
+
+        imprimir_titulo(
+            f"CREAR {self.ENTIDAD.upper()}"
+        )
 
         datos = {}
 
-        for campo in self.__controlador.MODELO.CAMPOS:
-            datos[campo] = input(f"{campo.capitalize()}: ")
+        for campo in self.controlador.MODELO.CAMPOS:
 
-        exito, mensaje = self.__controlador.crear(datos)
+            datos[campo] = input(
+                f"{campo.capitalize()}: "
+            ).strip()
 
-        self.mostrar_resultado(exito, mensaje)
+        resultado = self.controlador.crear(
+            datos
+        )
+
+        self.mostrar_resultado(resultado)
         self.pausa()
 
-    # ===== LISTAR =====
+    # --------------------------------------------------------
+    # LISTAR
+    # --------------------------------------------------------
+
     def listar(self):
-        imprimir_titulo("LISTA DE CLIENTES")
 
-        clientes = self.__controlador.listar()
+        imprimir_titulo(
+            f"LISTA DE {self.ENTIDADES.upper()}"
+        )
 
-        if not clientes:
+        registros = self.controlador.listar()
+
+        if not registros:
             imprimir_info(
-                "Todavía no hay clientes. "
-                "Use la opción 1 para crear el primero."
+                f"No hay {self.ENTIDADES} registrados."
             )
         else:
-            self.mostrar_tabla(clientes)
+            self.mostrar_tabla(registros)
 
         self.pausa()
 
-    # ===== BUSCAR =====
+    # --------------------------------------------------------
+    # BUSCAR
+    # --------------------------------------------------------
+
     def buscar(self):
-        imprimir_titulo("BUSCAR CLIENTE")
 
-        termino = input(
-            "Nombre, email, teléfono o ciudad: "
+        imprimir_titulo(
+            f"BUSCAR {self.ENTIDAD.upper()}"
         )
 
-        encontrados = self.__controlador.buscar(termino)
+        texto = input(
+            f"{self.TEXTO_BUSQUEDA}: "
+        ).strip()
 
-        if not encontrados:
+        resultados = self.controlador.buscar(
+            texto
+        )
+
+        if not resultados:
             imprimir_info(
-                f"Ningún cliente coincide con '{termino}'."
+                f"No se encontraron {self.ENTIDADES}."
             )
         else:
-            self.mostrar_tabla(encontrados)
+            self.mostrar_tabla(resultados)
 
         self.pausa()
 
-    # ===== VER POR ID =====
+    # --------------------------------------------------------
+    # VER POR ID
+    # --------------------------------------------------------
+
     def ver_por_id(self):
-        imprimir_titulo("VER CLIENTE POR ID")
 
-        id_cliente = self.pedir_entero(
-            "Id del cliente: "
+        imprimir_titulo(
+            f"VER {self.ENTIDAD.upper()} POR ID"
         )
 
-        if id_cliente is None:
-            imprimir_error(
-                "El id debe ser un número entero"
-            )
-            return self.pausa()
+        id_registro = self.pedir_entero(
+            "ID: "
+        )
 
-        cliente = self.__controlador.obtener(id_cliente)
+        registro = self.controlador.obtener(
+            id_registro
+        )
 
-        if cliente is None:
+        if not registro:
+
             imprimir_error(
-                f"No existe un cliente con id {id_cliente}"
+                f"No existe un {self.ENTIDAD} con ese ID."
             )
+
         else:
-            for clave, valor in cliente.a_diccionario().items():
-                print(
-                    f"  {clave.capitalize():<12}: {valor}"
-                )
 
-            imprimir_info(
-                f"Dominio del email: {cliente.dominio_email}"
-            )
+            print(f"ID: {registro.id}")
+            print(f"Nombre: {registro.nombre}")
+            print(f"Apellido: {registro.apellido}")
+            print(f"Email: {registro.email}")
+            print(f"Teléfono: {registro.telefono}")
+            print(f"Ciudad: {registro.ciudad}")
+            print(f"Dirección: {registro.direccion}")
 
         self.pausa()
 
-    # ===== ACTUALIZAR =====
+    # --------------------------------------------------------
+    # ACTUALIZAR
+    # --------------------------------------------------------
+
     def actualizar(self):
-        imprimir_titulo("ACTUALIZAR CLIENTE")
 
-        id_cliente = self.pedir_entero(
-            "Id del cliente: "
+        imprimir_titulo(
+            f"ACTUALIZAR {self.ENTIDAD.upper()}"
         )
 
-        if id_cliente is None:
-            imprimir_error(
-                "El id debe ser un número entero"
-            )
-            return self.pausa()
-
-        cliente = self.__controlador.obtener(id_cliente)
-
-        if cliente is None:
-            imprimir_error(
-                f"No existe un cliente con id {id_cliente}"
-            )
-            return self.pausa()
-
-        imprimir_info(
-            f"Editando a {cliente.nombre_completo}"
+        id_registro = self.pedir_entero(
+            "ID: "
         )
+
+        registro = self.controlador.obtener(
+            id_registro
+        )
+
+        if not registro:
+
+            imprimir_error(
+                f"No existe un {self.ENTIDAD} con ese ID."
+            )
+
+            self.pausa()
+            return
 
         print(
-            "Deje en blanco el campo que no quiera cambiar.\n"
+            "\nDeje vacío un campo si no desea modificarlo."
         )
 
         cambios = {}
 
-        for campo in self.__controlador.MODELO.CAMPOS:
-            actual = getattr(cliente, campo)
+        for campo in self.controlador.MODELO.CAMPOS:
 
-            nuevo = input(
-                f"{campo.capitalize()} [{actual}]: "
+            valor = input(
+                f"{campo.capitalize()} "
+                f"[{getattr(registro, campo)}]: "
             ).strip()
 
-            if nuevo:
-                cambios[campo] = nuevo
+            if valor:
+                cambios[campo] = valor
 
-        self.mostrar_resultado(
-            *self.__controlador.actualizar(
-                id_cliente,
-                cambios
+        if not cambios:
+
+            imprimir_info(
+                "No se realizaron cambios."
             )
+
+            self.pausa()
+            return
+
+        resultado = self.controlador.actualizar(
+            id_registro,
+            cambios
         )
+
+        self.mostrar_resultado(resultado)
+        self.pausa()
+
+    # --------------------------------------------------------
+    # ELIMINAR
+    # --------------------------------------------------------
+
+    def eliminar(self):
+
+        imprimir_titulo(
+            f"ELIMINAR {self.ENTIDAD.upper()}"
+        )
+
+        id_registro = self.pedir_entero(
+            "ID: "
+        )
+
+        registro = self.controlador.obtener(
+            id_registro
+        )
+
+        if not registro:
+
+            imprimir_error(
+                f"No existe un {self.ENTIDAD} con ese ID."
+            )
+
+            self.pausa()
+            return
+
+        print(
+            f"Se eliminará: "
+            f"{registro.nombre} {registro.apellido}"
+        )
+
+        if not confirmar(
+            "¿Está seguro de eliminarlo?"
+        ):
+
+            imprimir_info(
+                "Operación cancelada."
+            )
+
+            self.pausa()
+            return
+
+        resultado = self.controlador.eliminar(
+            id_registro
+        )
+
+        self.mostrar_resultado(resultado)
+        self.pausa()
+
+    # --------------------------------------------------------
+    # ESTADÍSTICAS
+    # --------------------------------------------------------
+
+    def estadisticas(self):
+
+        imprimir_titulo(
+            f"ESTADÍSTICAS DE {self.ENTIDADES.upper()}"
+        )
+
+        datos = self.controlador.estadisticas()
+
+        for clave, valor in datos.items():
+            print(f"{clave}: {valor}")
 
         self.pausa()
 
-    # ===== ELIMINAR =====
-    def eliminar(self):
-        imprimir_titulo("ELIMINAR CLIENTE")
+    # --------------------------------------------------------
+    # SALIR
+    # --------------------------------------------------------
 
-        id_cliente = self.pedir_entero(
-            "Id del cliente: "
-        )
-
-        if id_cliente is None:
-            imprimir_error(
-                "El id debe ser un número entero"
-            )
-            return self.pausa()
-
-        cliente = self.__controlador.obtener(id_cliente)
-
-        if cliente is None:
-            imprimir_error(
-                f"No existe un cliente con id {id_cliente}"
-            )
-            return self.pausa()
+    def salir(self):
 
         imprimir_info(
-            f"Se eliminará: {cliente}"
+            f"Saliendo del menú de {self.ENTIDADES}..."
         )
 
-        if confirmar("¿Confirma la eliminación?"):
-            self.mostrar_resultado(
-                *self.__controlador.eliminar(id_cliente)
-            )
-        else:
-            imprimir_info("Operación cancelada")
+    # --------------------------------------------------------
+    # MENÚ
+    # --------------------------------------------------------
 
-        self.pausa()
-
-    # ===== ESTADÍSTICAS =====
-    def estadisticas(self):
-        imprimir_titulo("ESTADÍSTICAS")
-
-        datos = self.__controlador.estadisticas()
-
-        print(
-            f"  Clientes registrados : {datos['total']}"
-        )
-
-        print(
-            f"  Ciudades distintas   : "
-            f"{len(datos['ciudades'])} -> "
-            f"{', '.join(datos['ciudades'])}"
-        )
-
-        print(
-            f"  Dominios de email    : "
-            f"{', '.join(datos['dominios'])}"
-        )
-
-        print(
-            f"  Sin teléfono         : "
-            f"{len(datos['sin_telefono'])}"
-        )
-
-        self.pausa()
-
-    # ===== SALIR =====
-    def salir(self):
-        self.__activo = False
-        imprimir_info("¡Hasta luego! 👋")
-
-    # ===== MOSTRAR MENÚ =====
     def mostrar_menu(self):
+
         imprimir_titulo(self.TITULO)
 
-        for tecla, (texto, _metodo) in self.__opciones.items():
-            print(f"  {tecla}. {texto}")
+        for numero, (texto, _) in self.__opciones.items():
+            print(f"{numero}. {texto}")
 
-        print()
-
-    # ===== EJECUTAR =====
     def ejecutar(self):
-        while self.__activo:
+
+        while True:
+
             self.mostrar_menu()
 
-            tecla = input(
-                "Seleccione una opción: "
-            ).strip()
+            opcion = self.pedir_entero(
+                "\nSeleccione una opción: "
+            )
 
-            if tecla not in self.__opciones:
-                imprimir_error("Opción no válida")
+            if opcion not in self.__opciones:
+
+                imprimir_error(
+                    "Opción no válida."
+                )
+
                 self.pausa()
                 continue
 
-            _texto, metodo = self.__opciones[tecla]
+            metodo = self.__opciones[opcion][1]
+
+            if opcion == 0:
+
+                metodo()
+                break
+
             metodo()
 
 
+# ============================================================
+# MENU DE ESTUDIANTES
+# ============================================================
+
 class MenuEstudiantes(MenuClientes):
-    """VISTA de estudiantes."""
 
     TITULO = "SISTEMA DE GESTIÓN DE ESTUDIANTES"
     ENTIDAD = "estudiante"
     ENTIDADES = "estudiantes"
-    TEXTO_BUSQUEDA = "Nombre, apellido, email, cedula o celular"
+
+    TEXTO_BUSQUEDA = (
+        "Nombre, apellido, carnet, email, cédula o celular"
+    )
+
     ANCHO = 110
 
-    def __init__(self, controlador=EstudianteController):
-        super().__init__(controlador)
+    def __init__(self):
+
+        super().__init__()
+
+        self.__controlador = EstudianteController()
 
         self.agregar_opcion(
-            "8",
+            8,
             "Agregar nota",
             self.agregar_nota
         )
 
         self.agregar_opcion(
-            "9",
+            9,
             "Ver promedio",
             self.ver_promedio
         )
 
         self.agregar_opcion(
-            "10",
+            10,
             "Materias en común",
             self.materias_en_comun
         )
 
-    @staticmethod
-    def pedir_numero(etiqueta):
-        try:
-            valor = float(
-                input(etiqueta).strip().replace(",", ".")
-            )
-        except ValueError:
-            return None
+    @property
+    def controlador(self):
+        return self.__controlador
 
-        return int(valor) if valor.is_integer() else valor
+    # --------------------------------------------------------
+    # TABLA ESTUDIANTES
+    # --------------------------------------------------------
 
-    # ===== TABLA DE ESTUDIANTES =====
     def mostrar_tabla(self, estudiantes):
+
         print(
             f"{'ID':<5}"
-            f"{'NOMBRE':<25}"
+            f"{'NOMBRE':<15}"
+            f"{'APELLIDO':<18}"
+            f"{'CARNET':<15}"
             f"{'CEDULA':<14}"
             f"{'CELULAR':<14}"
-            f"{'EMAIL':<28}"
             f"{'PROM.':<8}"
-            f"{'ESTADO':<10}"
+            f"{'ESTADO':<12}"
         )
 
         print("-" * self.ANCHO)
 
         for estudiante in estudiantes:
+
             print(
                 f"{estudiante.id:<5}"
-                f"{estudiante.nombre_completo:<25}"
+                f"{estudiante.nombre:<15}"
+                f"{estudiante.apellido:<18}"
+                f"{estudiante.carnet:<15}"
                 f"{estudiante.cedula:<14}"
                 f"{estudiante.celular:<14}"
-                f"{estudiante.email:<28}"
-                f"{estudiante.promedio:<8}"
-                f"{estudiante.estado:<10}"
+                f"{estudiante.promedio:<8.2f}"
+                f"{estudiante.estado:<12}"
             )
 
         print("-" * self.ANCHO)
@@ -381,195 +476,243 @@ class MenuEstudiantes(MenuClientes):
             f"Total: {len(estudiantes)} estudiante(s)"
         )
 
-    # ===== ESTADÍSTICAS =====
+    # --------------------------------------------------------
+    # NÚMERO
+    # --------------------------------------------------------
+
+    @staticmethod
+    def pedir_numero(mensaje):
+
+        while True:
+
+            try:
+                return float(input(mensaje))
+
+            except ValueError:
+
+                imprimir_error(
+                    "Debe ingresar un número."
+                )
+
+    # --------------------------------------------------------
+    # ESTADÍSTICAS
+    # --------------------------------------------------------
+
     def estadisticas(self):
-        imprimir_titulo("ESTADÍSTICAS")
+
+        imprimir_titulo(
+            "ESTADÍSTICAS DE ESTUDIANTES"
+        )
 
         datos = self.controlador.estadisticas()
 
         print(
-            f"  Estudiantes registrados : {datos['total']}"
+            f"Total de estudiantes: "
+            f"{datos.get('total', 0)}"
         )
 
         print(
-            f"  Aprobados               : {datos['aprobados']}"
+            f"Aprobados: "
+            f"{datos.get('aprobados', 0)}"
         )
 
         print(
-            f"  Reprobados              : {datos['reprobados']}"
+            f"Reprobados: "
+            f"{datos.get('reprobados', 0)}"
         )
 
         print(
-            f"  Materias ofertadas      : "
-            f"{len(datos['materias'])} -> "
-            f"{', '.join(datos['materias'])}"
+            f"Materias ofertadas: "
+            f"{datos.get('materias_ofertadas', 0)}"
         )
 
         self.pausa()
 
-    # ===== AGREGAR NOTA =====
-    def agregar_nota(self):
-        imprimir_titulo("AGREGAR NOTA")
+    # --------------------------------------------------------
+    # AGREGAR NOTA
+    # --------------------------------------------------------
 
-        id_estudiante = self.pedir_entero(
-            "Id del estudiante: "
+    def agregar_nota(self):
+
+        imprimir_titulo(
+            "AGREGAR NOTA"
         )
 
-        if id_estudiante is None:
-            imprimir_error(
-                "El id debe ser un número entero"
-            )
-            return self.pausa()
+        id_estudiante = self.pedir_entero(
+            "ID del estudiante: "
+        )
 
-        materia = input("Materia: ")
+        materia = input(
+            "Materia: "
+        ).strip()
 
         nota = self.pedir_numero(
-            "Nota (0 a 20): "
+            "Nota (0-20): "
         )
 
-        if nota is None:
-            imprimir_error(
-                "La nota debe ser un número"
-            )
-            return self.pausa()
-
-        self.mostrar_resultado(
-            *self.controlador.agregar_nota(
-                id_estudiante,
-                materia,
-                nota
-            )
+        resultado = self.controlador.agregar_nota(
+            id_estudiante,
+            materia,
+            nota
         )
 
+        self.mostrar_resultado(resultado)
         self.pausa()
 
-    # ===== VER PROMEDIO =====
+    # --------------------------------------------------------
+    # VER PROMEDIO
+    # --------------------------------------------------------
+
     def ver_promedio(self):
+
         imprimir_titulo(
-            "PROMEDIO DE UN ESTUDIANTE"
+            "PROMEDIO DEL ESTUDIANTE"
         )
 
         id_estudiante = self.pedir_entero(
-            "Id del estudiante: "
+            "ID del estudiante: "
         )
-
-        if id_estudiante is None:
-            imprimir_error(
-                "El id debe ser un número entero"
-            )
-            return self.pausa()
 
         estudiante = self.controlador.obtener(
             id_estudiante
         )
 
-        if estudiante is None:
+        if not estudiante:
+
             imprimir_error(
-                f"No existe un estudiante con id {id_estudiante}"
+                "No existe un estudiante con ese ID."
             )
-            return self.pausa()
+
+            self.pausa()
+            return
 
         print(
-            f"  Estudiante: {estudiante.nombre_completo} "
-            f"({estudiante.cedula})\n"
+            f"\nEstudiante: "
+            f"{estudiante.nombre} "
+            f"{estudiante.apellido}"
         )
 
-        if not estudiante.materias:
-            imprimir_info(
-                "Todavía no tiene materias ni notas."
-            )
-
-        for materia in sorted(estudiante.materias):
-            print(
-                f"  {materia:<20}: "
-                f"{estudiante.notas_de(materia)}"
-            )
-
-        print()
         print(
-            f"  Promedio general: "
-            f"{estudiante.promedio}"
+            f"Carnet: {estudiante.carnet}"
         )
 
-        self.mostrar_resultado(
-            estudiante.estado == "Aprobado",
-            f"Estado: {estudiante.estado}"
+        print(
+            f"Cédula: {estudiante.cedula}"
+        )
+
+        print(
+            f"Celular: {estudiante.celular}"
+        )
+
+        print(
+            f"Promedio: "
+            f"{estudiante.promedio:.2f}"
+        )
+
+        print(
+            f"Estado: "
+            f"{estudiante.estado}"
         )
 
         self.pausa()
 
-    # ===== MATERIAS EN COMÚN =====
+    # --------------------------------------------------------
+    # MATERIAS EN COMÚN
+    # --------------------------------------------------------
+
     def materias_en_comun(self):
-        imprimir_titulo("MATERIAS EN COMÚN")
 
-        id_a = self.pedir_entero(
-            "Id del primer estudiante: "
+        imprimir_titulo(
+            "MATERIAS EN COMÚN"
         )
 
-        id_b = self.pedir_entero(
-            "Id del segundo estudiante: "
+        id_1 = self.pedir_entero(
+            "ID del primer estudiante: "
         )
 
-        if id_a is None or id_b is None:
-            imprimir_error(
-                "Los ids deben ser números enteros"
-            )
-            return self.pausa()
-
-        exito, resultado = (
-            self.controlador.materias_en_comun(
-                id_a,
-                id_b
-            )
+        id_2 = self.pedir_entero(
+            "ID del segundo estudiante: "
         )
 
-        if not exito:
-            imprimir_error(resultado)
+        resultado = self.controlador.materias_en_comun(
+            id_1,
+            id_2
+        )
 
-        elif not resultado:
-            imprimir_info(
-                "No tienen materias en común."
-            )
+        if not resultado[0]:
+
+            imprimir_error(resultado[1])
 
         else:
-            imprimir_exito(
-                f"Materias en común ({len(resultado)}):"
-            )
 
-            for materia in sorted(resultado):
-                print(f"  - {materia}")
+            materias = resultado[1]
+
+            if materias:
+
+                imprimir_info(
+                    "Materias en común:"
+                )
+
+                for materia in materias:
+                    print(f"- {materia}")
+
+            else:
+
+                imprimir_info(
+                    "No tienen materias en común."
+                )
 
         self.pausa()
 
 
-# ==================================================
-# MAIN
-# ==================================================
+# ============================================================
+# MENÚ PRINCIPAL
+# ============================================================
 
 if __name__ == "__main__":
+
     try:
-        print("\n===== MENÚ PRINCIPAL =====")
-        print("1. Gestión de clientes")
-        print("2. Gestión de estudiantes")
-        print("0. Salir")
 
-        opcion = input(
-            "Seleccione una opción: "
-        ).strip()
+        while True:
 
-        if opcion == "1":
-            MenuClientes().ejecutar()
+            imprimir_titulo(
+                "SISTEMA DE GESTIÓN"
+            )
 
-        elif opcion == "2":
-            MenuEstudiantes().ejecutar()
+            print("1. Gestión de clientes")
+            print("2. Gestión de estudiantes")
+            print("0. Salir")
 
-        elif opcion == "0":
-            print("\nPrograma finalizado.")
+            opcion = input(
+                "\nSeleccione una opción: "
+            ).strip()
 
-        else:
-            print("\nOpción no válida.")
+            if opcion == "1":
+
+                MenuClientes().ejecutar()
+
+            elif opcion == "2":
+
+                MenuEstudiantes().ejecutar()
+
+            elif opcion == "0":
+
+                imprimir_exito(
+                    "Programa finalizado correctamente."
+                )
+
+                break
+
+            else:
+
+                imprimir_error(
+                    "Opción no válida."
+                )
 
     except KeyboardInterrupt:
-        print(
-            "\nPrograma interrumpido por el usuario."
+
+        print()
+
+        imprimir_info(
+            "Programa interrumpido por el usuario."
         )

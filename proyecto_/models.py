@@ -1,7 +1,6 @@
 class Cliente:
-    """MODELO: un cliente válido. Si los datos están mal, el objeto no se crea."""
+    """MODELO: un cliente válido."""
 
-    # ===== ATRIBUTOS DE CLASE =====
     CAMPOS = (
         "nombre",
         "apellido",
@@ -21,7 +20,7 @@ class Cliente:
 
     def __init__(
         self,
-        id_cliente,
+        id,
         nombre,
         apellido,
         email,
@@ -29,9 +28,7 @@ class Cliente:
         ciudad="",
         direccion=""
     ):
-        self.__id = id_cliente
-
-        # Se asignan mediante propiedades para validar los datos
+        self.__id = id
         self.nombre = nombre
         self.apellido = apellido
         self.email = email
@@ -41,11 +38,9 @@ class Cliente:
 
         Cliente.total_creados += 1
 
-    # ===== MÉTODOS ESTÁTICOS =====
-
     @staticmethod
-    def limpiar(texto):
-        return str(texto).strip()
+    def limpiar(valor):
+        return str(valor).strip()
 
     @staticmethod
     def es_email_valido(texto):
@@ -62,8 +57,6 @@ class Cliente:
             and not dominio.endswith(".")
         )
 
-    # ===== PROPIEDADES =====
-
     @property
     def id(self):
         return self.__id
@@ -74,12 +67,12 @@ class Cliente:
 
     @nombre.setter
     def nombre(self, valor):
-        valor = Cliente.limpiar(valor)
+        valor = self.limpiar(valor)
 
         if not valor:
             raise ValueError("El nombre es obligatorio")
 
-        self.__nombre = valor.title()
+        self.__nombre = valor
 
     @property
     def apellido(self):
@@ -87,12 +80,12 @@ class Cliente:
 
     @apellido.setter
     def apellido(self, valor):
-        valor = Cliente.limpiar(valor)
+        valor = self.limpiar(valor)
 
         if not valor:
             raise ValueError("El apellido es obligatorio")
 
-        self.__apellido = valor.title()
+        self.__apellido = valor
 
     @property
     def email(self):
@@ -100,12 +93,10 @@ class Cliente:
 
     @email.setter
     def email(self, valor):
-        valor = Cliente.limpiar(valor)
+        valor = self.limpiar(valor)
 
-        if not Cliente.es_email_valido(valor):
-            raise ValueError(
-                f"Email inválido: '{valor}'"
-            )
+        if not self.es_email_valido(valor):
+            raise ValueError("El email no tiene un formato válido")
 
         self.__email = valor.lower()
 
@@ -115,12 +106,10 @@ class Cliente:
 
     @telefono.setter
     def telefono(self, valor):
-        valor = Cliente.limpiar(valor)
+        valor = self.limpiar(valor)
 
         if valor and not valor.isdigit():
-            raise ValueError(
-                "El teléfono solo puede tener números"
-            )
+            raise ValueError("El teléfono solo debe contener números")
 
         self.__telefono = valor
 
@@ -130,7 +119,7 @@ class Cliente:
 
     @ciudad.setter
     def ciudad(self, valor):
-        self.__ciudad = Cliente.limpiar(valor).title()
+        self.__ciudad = self.limpiar(valor)
 
     @property
     def direccion(self):
@@ -138,61 +127,56 @@ class Cliente:
 
     @direccion.setter
     def direccion(self, valor):
-        self.__direccion = Cliente.limpiar(valor)
-
-    # ===== PROPIEDADES CALCULADAS =====
+        self.__direccion = self.limpiar(valor)
 
     @property
     def nombre_completo(self):
-        return f"{self.__nombre} {self.__apellido}"
+        return f"{self.nombre} {self.apellido}"
 
     @property
     def dominio_email(self):
-        return self.__email.split("@")[1]
-
-    # ===== MÉTODOS DE INSTANCIA =====
+        return self.email.split("@")[1]
 
     def a_diccionario(self):
         return {
-            "id": self.__id,
-            "nombre": self.__nombre,
-            "apellido": self.__apellido,
-            "email": self.__email,
-            "telefono": self.__telefono,
-            "ciudad": self.__ciudad,
-            "direccion": self.__direccion,
+            "id": self.id,
+            "nombre": self.nombre,
+            "apellido": self.apellido,
+            "email": self.email,
+            "telefono": self.telefono,
+            "ciudad": self.ciudad,
+            "direccion": self.direccion
         }
 
     def __str__(self):
         return (
-            f"[{self.__id}] "
-            f"{self.nombre_completo} - "
-            f"{self.__email}"
+            f"Cliente #{self.id}: "
+            f"{self.nombre_completo} - {self.email}"
         )
-
-    # ===== MÉTODO DE CLASE =====
 
     @classmethod
     def desde_diccionario(cls, datos):
         return cls(
-            datos["id"],
-            datos["nombre"],
-            datos["apellido"],
-            datos["email"],
-            datos.get("telefono", ""),
-            datos.get("ciudad", ""),
-            datos.get("direccion", ""),
+            id=datos["id"],
+            nombre=datos["nombre"],
+            apellido=datos["apellido"],
+            email=datos["email"],
+            telefono=datos.get("telefono", ""),
+            ciudad=datos.get("ciudad", ""),
+            direccion=datos.get("direccion", "")
         )
 
 
-class Estudiante:
-    """MODELO: un estudiante con materias y notas."""
+# ============================================================
+# ESTUDIANTE
+# ============================================================
 
-    # ===== ATRIBUTOS DE CLASE =====
+class Estudiante(Cliente):
 
     CAMPOS = (
         "nombre",
         "apellido",
+        "carnet",
         "email",
         "cedula",
         "celular"
@@ -201,6 +185,7 @@ class Estudiante:
     OBLIGATORIOS = (
         "nombre",
         "apellido",
+        "carnet",
         "email",
         "cedula",
         "celular"
@@ -210,47 +195,28 @@ class Estudiante:
     NOTA_MAXIMA = 20
     NOTA_APROBACION = 14
 
-    total_creados = 0
-
     def __init__(
         self,
-        id_estudiante,
+        id,
         nombre,
         apellido,
+        carnet,
         email,
         cedula,
         celular,
         notas=None,
         materias=None
     ):
-        self.__id = id_estudiante
-
-        # Se utilizan las propiedades para validar
+        self.__id = id
         self.nombre = nombre
         self.apellido = apellido
+        self.carnet = carnet
         self.email = email
         self.cedula = cedula
         self.celular = celular
 
-        self.__notas = dict(notas) if notas else {}
-        self.__materias = set(materias) if materias else set()
-
-        Estudiante.total_creados += 1
-
-    # ===== MÉTODOS ESTÁTICOS =====
-
-    @staticmethod
-    def limpiar(texto):
-        return str(texto).strip()
-
-    @staticmethod
-    def es_nota_valida(nota):
-        return (
-            isinstance(nota, (int, float))
-            and Estudiante.NOTA_MINIMA <= nota <= Estudiante.NOTA_MAXIMA
-        )
-
-    # ===== PROPIEDADES =====
+        self.__notas = notas or {}
+        self.__materias = materias or []
 
     @property
     def id(self):
@@ -262,12 +228,12 @@ class Estudiante:
 
     @nombre.setter
     def nombre(self, valor):
-        valor = Estudiante.limpiar(valor)
+        valor = str(valor).strip()
 
         if not valor:
             raise ValueError("El nombre es obligatorio")
 
-        self.__nombre = valor.title()
+        self.__nombre = valor
 
     @property
     def apellido(self):
@@ -275,12 +241,33 @@ class Estudiante:
 
     @apellido.setter
     def apellido(self, valor):
-        valor = Estudiante.limpiar(valor)
+        valor = str(valor).strip()
 
         if not valor:
             raise ValueError("El apellido es obligatorio")
 
-        self.__apellido = valor.title()
+        self.__apellido = valor
+
+    # --------------------------------------------------------
+    # CARNET
+    # --------------------------------------------------------
+
+    @property
+    def carnet(self):
+        return self.__carnet
+
+    @carnet.setter
+    def carnet(self, valor):
+        valor = str(valor).strip()
+
+        if not valor:
+            raise ValueError("El carnet es obligatorio")
+
+        self.__carnet = valor
+
+    # --------------------------------------------------------
+    # EMAIL
+    # --------------------------------------------------------
 
     @property
     def email(self):
@@ -288,14 +275,16 @@ class Estudiante:
 
     @email.setter
     def email(self, valor):
-        valor = Estudiante.limpiar(valor)
+        valor = str(valor).strip()
 
-        if "@" not in valor:
-            raise ValueError(
-                f"Email inválido: '{valor}'"
-            )
+        if not self.es_email_valido(valor):
+            raise ValueError("El email no tiene un formato válido")
 
         self.__email = valor.lower()
+
+    # --------------------------------------------------------
+    # CÉDULA
+    # --------------------------------------------------------
 
     @property
     def cedula(self):
@@ -303,19 +292,19 @@ class Estudiante:
 
     @cedula.setter
     def cedula(self, valor):
-        valor = Estudiante.limpiar(valor)
+        valor = str(valor).strip()
 
         if not valor:
-            raise ValueError(
-                "La cédula es obligatoria"
-            )
+            raise ValueError("La cédula es obligatoria")
 
         if not valor.isdigit():
-            raise ValueError(
-                "La cédula solo puede tener números"
-            )
+            raise ValueError("La cédula solo debe contener números")
 
         self.__cedula = valor
+
+    # --------------------------------------------------------
+    # CELULAR
+    # --------------------------------------------------------
 
     @property
     def celular(self):
@@ -323,128 +312,116 @@ class Estudiante:
 
     @celular.setter
     def celular(self, valor):
-        valor = Estudiante.limpiar(valor)
+        valor = str(valor).strip()
 
         if not valor:
-            raise ValueError(
-                "El celular es obligatorio"
-            )
+            raise ValueError("El celular es obligatorio")
 
         if not valor.isdigit():
-            raise ValueError(
-                "El celular solo puede tener números"
-            )
+            raise ValueError("El celular solo debe contener números")
 
         self.__celular = valor
 
-    @property
-    def materias(self):
-        return set(self.__materias)
+    # --------------------------------------------------------
+    # MATERIAS
+    # --------------------------------------------------------
 
     @property
-    def nombre_completo(self):
-        return f"{self.__nombre} {self.__apellido}"
+    def materias(self):
+        return self.__materias
+
+    # --------------------------------------------------------
+    # NOTAS
+    # --------------------------------------------------------
 
     @property
     def promedio(self):
-        todas = []
-
-        for lista_notas in self.__notas.values():
-            todas.extend(lista_notas)
-
-        if not todas:
+        if not self.__notas:
             return 0
 
-        return round(
-            sum(todas) / len(todas),
-            2
-        )
+        return sum(self.__notas.values()) / len(self.__notas)
 
     @property
     def estado(self):
+        if not self.__notas:
+            return "Sin notas"
+
         if self.promedio >= self.NOTA_APROBACION:
             return "Aprobado"
 
         return "Reprobado"
 
-    # ===== MÉTODOS DE INSTANCIA =====
-
     def inscribir_materia(self, materia):
-        materia = Estudiante.limpiar(materia).title()
+        materia = str(materia).strip()
 
         if not materia:
-            raise ValueError(
-                "La materia no puede estar vacía"
-            )
+            raise ValueError("La materia no puede estar vacía")
 
-        self.__materias.add(materia)
-
-        return materia
+        if materia not in self.__materias:
+            self.__materias.append(materia)
 
     def agregar_nota(self, materia, nota):
-        if not Estudiante.es_nota_valida(nota):
+        materia = str(materia).strip()
+
+        try:
+            nota = float(nota)
+        except ValueError:
+            raise ValueError("La nota debe ser numérica")
+
+        if nota < self.NOTA_MINIMA or nota > self.NOTA_MAXIMA:
             raise ValueError(
                 f"La nota debe estar entre "
-                f"{Estudiante.NOTA_MINIMA} y "
-                f"{Estudiante.NOTA_MAXIMA}"
+                f"{self.NOTA_MINIMA} y {self.NOTA_MAXIMA}"
             )
 
-        materia = self.inscribir_materia(materia)
-
-        self.__notas.setdefault(
-            materia,
-            []
-        ).append(nota)
-
-        return materia
+        self.inscribir_materia(materia)
+        self.__notas[materia] = nota
 
     def notas_de(self, materia):
-        materia = Estudiante.limpiar(
-            materia
-        ).title()
+        return self.__notas.get(materia)
 
+    def materias_en_comun(self, otro_estudiante):
         return list(
-            self.__notas.get(
-                materia,
-                []
+            set(self.__materias).intersection(
+                set(otro_estudiante.materias)
             )
         )
 
-    def materias_en_comun(self, otro):
-        return self.__materias & otro.materias
+    # --------------------------------------------------------
+    # DICCIONARIO
+    # --------------------------------------------------------
 
     def a_diccionario(self):
         return {
-            "id": self.__id,
-            "nombre": self.__nombre,
-            "apellido": self.__apellido,
-            "email": self.__email,
-            "cedula": self.__cedula,
-            "celular": self.__celular,
+            "id": self.id,
+            "nombre": self.nombre,
+            "apellido": self.apellido,
+            "carnet": self.carnet,
+            "email": self.email,
+            "cedula": self.cedula,
+            "celular": self.celular,
             "notas": self.__notas,
-            "materias": sorted(self.__materias),
+            "materias": self.__materias
         }
 
     def __str__(self):
         return (
-            f"[{self.__cedula}] "
-            f"{self.nombre_completo} - "
-            f"Promedio: {self.promedio}"
+            f"Estudiante #{self.id}: "
+            f"{self.nombre} {self.apellido} - "
+            f"Carnet: {self.carnet} - "
+            f"Cédula: {self.cedula}"
         )
-
-    # ===== MÉTODO DE CLASE =====
 
     @classmethod
     def desde_diccionario(cls, datos):
         return cls(
-            datos["id"],
-            datos["nombre"],
-            datos["apellido"],
-            datos["email"],
-            datos["cedula"],
-            datos["celular"],
+            id=datos["id"],
+            nombre=datos["nombre"],
+            apellido=datos["apellido"],
+            carnet=datos["carnet"],
+            email=datos["email"],
+            cedula=datos["cedula"],
+            celular=datos["celular"],
             notas=datos.get("notas", {}),
-            materias=set(
-                datos.get("materias", [])
-            ),
+            materias=datos.get("materias", [])
         )
